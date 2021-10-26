@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, slice::Iter};
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -52,6 +52,20 @@ pub struct FeatureManifest {
     // such as images and display text.
     pub hints: HashMap<StringId, FromStringDef>,
     pub feature_defs: Vec<FeatureDef>,
+}
+
+impl FeatureManifest {
+    pub fn iter_enum_defs(&self) -> Iter<EnumDef> {
+        self.enum_defs.iter()
+    }
+
+    pub fn iter_object_defs(&self) -> Iter<ObjectDef> {
+        self.obj_defs.iter()
+    }
+
+    pub fn iter_feature_defs(&self) -> Iter<FeatureDef> {
+        self.feature_defs.iter()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -127,7 +141,7 @@ pub struct PropDef {
     pub default: Literal,
 }
 
-type Literal = Value;
+pub type Literal = Value;
 
 #[cfg(test)]
 mod unit_tests {
