@@ -46,11 +46,14 @@ pub(crate) type StringId = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct FeatureManifest {
+    #[serde(rename = "enums")]
     pub enum_defs: Vec<EnumDef>,
+    #[serde(rename = "objects")]
     pub obj_defs: Vec<ObjectDef>,
     // `hints` are useful for things that will be constructed from strings
     // such as images and display text.
     pub hints: HashMap<StringId, FromStringDef>,
+    #[serde(rename = "features")]
     pub feature_defs: Vec<FeatureDef>,
 }
 
@@ -166,6 +169,7 @@ impl ObjectDef {
 pub struct PropDef {
     pub name: String,
     pub doc: String,
+    #[serde(rename = "type")]
     pub typ: TypeRef,
     pub default: Literal,
 }
