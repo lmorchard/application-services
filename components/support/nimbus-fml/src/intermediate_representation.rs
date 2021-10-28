@@ -94,7 +94,7 @@ impl FeatureDef {
     pub fn props(&self) -> Vec<PropDef> {
         self.props.clone()
     }
-    pub fn default(&self) -> Option<Literal> {
+    pub fn _default(&self) -> Option<Literal> {
         self.default.clone()
     }
 }
@@ -106,6 +106,17 @@ pub struct EnumDef {
     pub variants: Vec<VariantDef>,
 }
 
+impl EnumDef {
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+    pub fn doc(&self) -> String {
+        self.doc.clone()
+    }
+    pub fn variants(&self) -> Vec<VariantDef> {
+        self.variants.clone()
+    }
+}
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct FromStringDef {
     pub name: String,
@@ -115,8 +126,8 @@ pub struct FromStringDef {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct VariantDef {
-    name: String,
-    doc: String,
+    pub(crate) name: String,
+    pub(crate) doc: String,
 }
 impl VariantDef {
     #[allow(dead_code)]
@@ -125,6 +136,12 @@ impl VariantDef {
             name: name.into(),
             doc: doc.into(),
         }
+    }
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+    pub fn doc(&self) -> String {
+        self.doc.clone()
     }
 }
 
