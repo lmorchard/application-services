@@ -1,24 +1,21 @@
-use futures_util::TryStreamExt;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
 use std::thread;
-use tokio::task;
 
 use env_logger::Env;
 use nimbus::{
-    error::Result, AppContext, AvailableRandomizationUnits, EnrollmentStatus, NimbusClient,
+    error::Result, AppContext, AvailableRandomizationUnits, NimbusClient,
     RemoteSettingsConfig,
 };
 
 const DEFAULT_BASE_URL: &str = "https://firefox.settings.services.mozilla.com";
 const DEFAULT_COLLECTION_NAME: &str = "messaging-experiments";
 
-async fn api_index() -> hyper::Result<Response<Body>> {
-    Ok(Response::new(Body::from(
-        "Try POSTing data to /echo such as: `curl localhost:3000/echo -XPOST -d 'hello world'`",
-    )))
-}
-
+// TODO accept nimbus_id and initial client enrollment state in POST body
+// TODO accept some config context from POST body
+// TODO find a way to use rkv as in-memory only, alternately cache fetched experiments
+// TODO serialize available and enrolled experiments into JSON for response
+// TODO find a better approach to running fetch_experiments() than in a thread
 async fn api_experiments() -> hyper::Result<Response<Body>> {
     let result = || {
         let config = r#"{
@@ -96,6 +93,12 @@ async fn api_experiments() -> hyper::Result<Response<Body>> {
     };
 
     Ok(res)
+}
+
+async fn api_index() -> hyper::Result<Response<Body>> {
+    Ok(Response::new(Body::from(
+        "Try POSTing data to /echo such as: `curl localhost:3000/echo -XPOST -d 'hello world'`",
+    )))
 }
 
 /// This is our service handler. It receives a Request, routes on its
