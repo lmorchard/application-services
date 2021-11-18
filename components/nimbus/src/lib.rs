@@ -459,7 +459,7 @@ impl NimbusClient {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnrolledExperiment {
     pub feature_ids: Vec<String>,
     pub slug: String,
@@ -622,6 +622,7 @@ impl BucketConfig {
 }
 
 // This type is passed across the FFI to client consumers, e.g. UI for testing tooling.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AvailableExperiment {
     pub slug: String,
     pub user_facing_name: String,
@@ -630,6 +631,7 @@ pub struct AvailableExperiment {
     pub reference_branch: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExperimentBranch {
     pub slug: String,
     pub ratio: i32,

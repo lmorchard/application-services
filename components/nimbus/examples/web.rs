@@ -1,12 +1,13 @@
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
+use nimbus::{AvailableExperiment, EnrolledExperiment, Experiment};
 use std::thread;
 
 use env_logger::Env;
 use nimbus::{
-    error::Result, AppContext, AvailableRandomizationUnits, NimbusClient,
-    RemoteSettingsConfig,
+    error::Result, AppContext, AvailableRandomizationUnits, NimbusClient, RemoteSettingsConfig,
 };
+use serde_derive::*;
 
 const DEFAULT_BASE_URL: &str = "https://firefox.settings.services.mozilla.com";
 const DEFAULT_COLLECTION_NAME: &str = "messaging-experiments";
@@ -16,8 +17,15 @@ const DEFAULT_COLLECTION_NAME: &str = "messaging-experiments";
 // TODO find a way to use rkv as in-memory only, alternately cache fetched experiments
 // TODO serialize available and enrolled experiments into JSON for response
 // TODO find a better approach to running fetch_experiments() than in a thread
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiExperiments {
+    pub nimbus_id: String,
+    pub available: Vec<Experiment>,
+    pub enrolled: Vec<EnrolledExperiment>,
+}
+
 async fn api_experiments() -> hyper::Result<Response<Body>> {
-    let result = || {
+    let result = || -> Result<ApiExperiments, nimbus::NimbusError> {
         let config = r#"{
             "context": {
                 "app_id": "org.mozilla.fenix",
@@ -77,15 +85,24 @@ async fn api_experiments() -> hyper::Result<Response<Body>> {
         )?;
         log::info!("Nimbus ID is {}", nimbus_client.nimbus_id()?);
         nimbus_client.apply_pending_experiments()?;
-        // nimbus_client.get_all_experiments()
-        nimbus_client.get_active_experiments()
+        Ok(ApiExperiments {
+            nimbus_id: nimbus_client.nimbus_id().unwrap().to_string(),
+            available: nimbus_client.get_all_experiments()?,
+            enrolled: nimbus_client.get_active_experiments()?,
+        })
     };
 
     let res = match result() {
-        Ok(experiments) => Response::builder()
-            .status(StatusCode::OK)
-            .body(format!("{:?}", experiments).into())
-            .unwrap(),
+        Ok(experiments) => match serde_json::to_string(&experiments) {
+            Ok(json_str) => Response::builder()
+                .status(StatusCode::OK)
+                .body(json_str.into())
+                .unwrap(),
+            Err(error) => Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(format!("Error: {:?}", error).into())
+                .unwrap(),
+        },
         Err(error) => Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
             .body(format!("Error: {:?}", error).into())
